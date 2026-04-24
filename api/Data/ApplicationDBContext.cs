@@ -21,6 +21,25 @@ namespace api.Data
 
         public DbSet<AccountType> AccountTypes { get; set; }
 
+        // Seed the default Account Types
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AccountType>().HasData(
+                new AccountType
+                {
+                    Id = 1,
+                    Name = "Checking"
+                },
+                new AccountType
+                {
+                    Id = 2,
+                    Name = "Savings"
+                }
+            );
+        }
+
 
     }
 }
