@@ -15,11 +15,11 @@ namespace api.Data
             
         }
 
-        public DbSet<Customer> Customer { get; set; }
+        public DbSet<Customer> Customers { get; set; }
 
-        public DbSet<Account> Account { get; set; }
+        public DbSet<Account> Accounts { get; set; }
 
-        public DbSet<AccountType> AccountType { get; set; }
+        public DbSet<AccountType> AccountTypes { get; set; }
 
 
     }
