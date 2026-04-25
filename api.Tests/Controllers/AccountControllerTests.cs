@@ -8,6 +8,7 @@ using api.DTOs.Account;
 using api.Interfaces;
 using api.Models;
 using api.Repositories;
+using api.Services;
 using api.Tests.Fixtures;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,9 @@ namespace api.Tests.Controllers
         private AccountController CreateController()
         {
             var repository = new AccountRepository(_fixture.Context);
-            return new AccountController(repository);
+            var service = new AccountService(repository);
+
+            return new AccountController(service);
         }
 
         [Fact]

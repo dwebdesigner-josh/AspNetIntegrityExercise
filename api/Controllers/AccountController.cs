@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using api.DTOs.Account;
+using api.Enums;
 using api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,98 +14,55 @@ namespace api.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly IAccountRepository _accountRepo;
-        public AccountController(IAccountRepository accountRepo)
+        private readonly IAccountService _accountService;
+        public AccountController(IAccountService accountService)
         {
-            _accountRepo = accountRepo;
+            _accountService = accountService;
         }
 
-        // make a deposit
-// The endpoint will receive the following JSON:
-// {
-// customerId: 5,
-// accountId: 17,
-// amount: 112.00
-// }
-// And should return:
-// {
-// customerId: 5,
-// accountId: 17,
-// balance: 2287.13,
-// succeeded: true
-// }
+        private IActionResult HandleResult(AccountBalanceResponseDTO result)
+    {
+        if (result.Succeeded)
+        {
+            return Ok(result); 
+        }
+            
+
+        switch (result.ErrorType)
+        {
+            case AccountErrorType.NotFound:
+                return NotFound("Account not found for customer");
+
+            case AccountErrorType.InvalidAmount:
+                return BadRequest("Transaction amount must be greater than zero");
+
+            case AccountErrorType.InsufficientFunds:
+                return Conflict("Insufficient funds for this withdrawal");
+
+            case AccountErrorType.ServerError:
+                return StatusCode(500, "Failed to process transaction");
+
+            default:
+                return StatusCode(500, "Unknown error");
+        }
+    }
+
 
         [HttpPost("deposit")] // POST not PUT because this isn't a simple update
         public async Task<IActionResult> Deposit([FromBody] AccountTransactionRequestDTO accountDepositDTO)
         {
-            var account = await _accountRepo.GetByIdAsync(accountDepositDTO.AccountId);
-
-            if(account == null || account.CustomerId != accountDepositDTO.CustomerId)
-            {
-                return NotFound("Account not found for customer");
-            }
-            if (accountDepositDTO.Amount <= 0)
-            {
-                return BadRequest("Transaction amount must be greater than zero");
-            }
-
-            account.Balance += accountDepositDTO.Amount;
-
-            try
-            {
-                await _accountRepo.UpdateAsync(account);
-            }
-            catch (DbUpdateException)
-            {
-                return BadRequest("Failed to process deposit");
-            }
-
-            return Ok(new AccountBalanceResponseDTO
-            {
-                CustomerId = accountDepositDTO.CustomerId,
-                AccountId =  accountDepositDTO.AccountId,
-                Balance = account.Balance,
-                Succeeded = true
-            });
+            var result = await _accountService.DepositAsync(accountDepositDTO);
+            return HandleResult(result);
+            
         }
 
         [HttpPost("withdraw")] // POST not PUT because this isn't a simple update
         public async Task<IActionResult> Withdraw([FromBody] AccountTransactionRequestDTO accountWithdrawDTO)
         {
-            var account = await _accountRepo.GetByIdAsync(accountWithdrawDTO.AccountId);
 
-            if(account == null || account.CustomerId != accountWithdrawDTO.CustomerId)
-            {
-                return NotFound("Account not found for customer");
-            }
-            if (accountWithdrawDTO.Amount <= 0)
-            {
-                return BadRequest("Transaction amount must be greater than zero");
-            }
-            if (account.Balance < accountWithdrawDTO.Amount) // cannot bring balance below 0
-            {
-                return Conflict("Insufficient funds for this withdrawal");
-            }
+            var result = await _accountService.WithdrawAsync(accountWithdrawDTO);
+            return HandleResult(result);
 
-
-            account.Balance -= accountWithdrawDTO.Amount;
-
-            try
-            {
-                await _accountRepo.UpdateAsync(account);
-            }
-            catch (DbUpdateException)
-            {
-                return BadRequest("Failed to process withdrawal");
-            }
-
-            return Ok(new AccountBalanceResponseDTO
-            {
-                CustomerId = accountWithdrawDTO.CustomerId,
-                AccountId =  accountWithdrawDTO.AccountId,
-                Balance = account.Balance,
-                Succeeded = true
-            });
         }
     }
 }
