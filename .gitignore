@@ -1,6 +1,6 @@
 # Build outputs
-bin/
-obj/
+**/bin/
+**/obj/
 
 # Test results
 TestResults/
@@ -10,11 +10,3 @@ TestResults/
 .vscode/
 *.user
 *.suo
-
-# dotnet
-*.dll
-*.pdb
-*.exe
-
-# EF Core
-Migrations/*Designer.cs
