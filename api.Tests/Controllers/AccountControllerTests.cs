@@ -1,0 +1,234 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using api.Controllers;
+using api.Data;
+using api.DTOs.Account;
+using api.Interfaces;
+using api.Models;
+using api.Repositories;
+using api.Tests.Fixtures;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+
+namespace api.Tests.Controllers
+{
+    public class AccountControllerTests : IDisposable
+    {
+        private readonly DbContextFixture _fixture;
+
+        public AccountControllerTests() // setup - runs before every test
+        {
+            _fixture = new DbContextFixture();
+            // _fixture.SeedTestData(); // Seeding is left to individual tests to avoid implicit shared setup
+
+        }
+
+
+        private AccountController CreateController()
+        {
+            var repository = new AccountRepository(_fixture.Context);
+            return new AccountController(repository);
+        }
+
+        [Fact]
+        public async Task Deposit_WithValidRequest_ReturnsOkAndUpdatesBalance()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = 112.00m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<AccountBalanceResponseDTO>(okResult.Value);
+            
+            Assert.Equal(5, response.CustomerId);
+            Assert.Equal(17, response.AccountId);
+            Assert.Equal(2287.13m, response.Balance);
+            Assert.True(response.Succeeded);
+        }
+
+        [Fact]
+        public async Task Deposit_WithNonexistentAccount_ReturnsNotFound()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 999,
+                Amount = 100.00m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("Account not found for customer", notFoundResult.Value);
+        }
+
+        [Fact]
+        public async Task Deposit_WithWrongCustomerId_ReturnsNotFound()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 999, // Wrong customer
+                AccountId = 17,
+                Amount = 100.00m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Equal("Account not found for customer", notFoundResult.Value);
+        }
+
+        [Fact]
+        public async Task Deposit_WithNegativeAmount_ReturnsBadRequest()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = -50.00m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Deposit amount must be greater than zero", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Deposit_WithZeroAmount_ReturnsBadRequest()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = 0m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Deposit amount must be greater than zero", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Deposit_WithSmallAmount_ReturnsOk()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = 0.01m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<AccountBalanceResponseDTO>(okResult.Value);
+            
+            Assert.Equal(2175.14m, response.Balance);
+            Assert.True(response.Succeeded);
+        }
+
+        [Fact]
+        public async Task Deposit_WithLargeAmount_ReturnsOk()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+            var depositRequest = new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = 10000.00m
+            };
+
+            // Act
+            var result = await controller.Deposit(depositRequest);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = Assert.IsType<AccountBalanceResponseDTO>(okResult.Value);
+            
+            Assert.Equal(12175.13m, response.Balance);
+            Assert.True(response.Succeeded);
+        }
+
+        [Fact]
+        public async Task Deposit_MultipleDeposits_BalanceAccumulates()
+        {
+            // Arrange
+            _fixture.SeedTestData(); 
+            var controller = CreateController();
+
+            // Act - First deposit
+            var result1 = await controller.Deposit(new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = 100m
+            });
+            var response1 = Assert.IsType<OkObjectResult>(result1).Value as AccountBalanceResponseDTO;
+            Assert.NotNull(response1);
+            Assert.Equal(2275.13m, response1.Balance);
+
+            // Act - Second deposit
+            var result2 = await controller.Deposit(new AccountDepositRequestDTO
+            {
+                CustomerId = 5,
+                AccountId = 17,
+                Amount = 200m
+            });
+            var response2 = Assert.IsType<OkObjectResult>(result2).Value as AccountBalanceResponseDTO;
+
+            // Assert
+            Assert.NotNull(response2);
+            Assert.Equal(2475.13m, response2.Balance);
+        }
+
+
+        public void Dispose()
+        {
+            // Teardown: runs after every test
+            // can put extra teardown logic here in the future
+            _fixture.Dispose();
+        }
+    }
+}

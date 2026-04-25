@@ -21,6 +21,7 @@ namespace api.Repositories
         public async Task<Account?> GetByIdAsync(int id)
         {
             return await _context.Accounts.FindAsync(id); // Find is better than FirstOrDefault for Id's from Databases with EF - checks DbContext memory (caching) so can be faster
+            // FindAsync returns null if not found
         }
 
         public async Task UpdateAsync(Account accountModel)

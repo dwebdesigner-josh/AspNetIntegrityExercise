@@ -1,0 +1,20 @@
+# Build outputs
+bin/
+obj/
+
+# Test results
+TestResults/
+
+# VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+
+# dotnet
+*.dll
+*.pdb
+*.exe
+
+# EF Core
+Migrations/*Designer.cs
