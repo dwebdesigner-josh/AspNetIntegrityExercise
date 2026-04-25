@@ -67,5 +67,44 @@ namespace api.Controllers
                 Succeeded = true
             });
         }
+
+        [HttpPost("withdraw")] // POST not PUT because this isn't a simple update
+        public async Task<IActionResult> Withdraw([FromBody] AccountTransactionRequestDTO accountWithdrawDTO)
+        {
+            var account = await _accountRepo.GetByIdAsync(accountWithdrawDTO.AccountId);
+
+            if(account == null || account.CustomerId != accountWithdrawDTO.CustomerId)
+            {
+                return NotFound("Account not found for customer");
+            }
+            if (accountWithdrawDTO.Amount <= 0)
+            {
+                return BadRequest("Transaction amount must be greater than zero");
+            }
+            if (account.Balance < accountWithdrawDTO.Amount) // cannot bring balance below 0
+            {
+                return Conflict("Insufficient funds for this withdrawal");
+            }
+
+
+            account.Balance -= accountWithdrawDTO.Amount;
+
+            try
+            {
+                await _accountRepo.UpdateAsync(account);
+            }
+            catch (DbUpdateException)
+            {
+                return BadRequest("Failed to process withdrawal");
+            }
+
+            return Ok(new AccountBalanceResponseDTO
+            {
+                CustomerId = accountWithdrawDTO.CustomerId,
+                AccountId =  accountWithdrawDTO.AccountId,
+                Balance = account.Balance,
+                Succeeded = true
+            });
+        }
     }
 }
