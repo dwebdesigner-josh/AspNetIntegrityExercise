@@ -39,6 +39,25 @@ Implementation of Banking API using ASP.NET Core Web API and repository pattern.
 
             - (recommended) use a secret instead of directly putting your connection string in the project file
 
+                * in CLI:
+
+                    cd api
+                    
+                    dotnet user-secrets init
+
+                    dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=aspnetintegrity;Username=postgres;Password=yourpasswordhere"
+
+                * in api/appsettings.json
+                
+                    change FROM:
+                    
+                    "DefaultConnection" : "Host=localhost;Port=5432;Database=aspnetintegrity;Username=postgres;Password=your_password_here" 
+
+                    TO:
+
+                    "DefaultConnection" : ""
+
+
         3. create database (in psql/pgAdmin)
 
             - log in to psql:
