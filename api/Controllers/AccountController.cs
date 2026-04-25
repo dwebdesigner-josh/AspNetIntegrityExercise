@@ -35,7 +35,7 @@ namespace api.Controllers
 // }
 
         [HttpPost("deposit")] // POST not PUT because this isn't a simple update
-        public async Task<IActionResult> Deposit([FromBody] AccountDepositRequestDTO accountDepositDTO)
+        public async Task<IActionResult> Deposit([FromBody] AccountTransactionRequestDTO accountDepositDTO)
         {
             var account = await _accountRepo.GetByIdAsync(accountDepositDTO.AccountId);
 
@@ -45,7 +45,7 @@ namespace api.Controllers
             }
             if (accountDepositDTO.Amount <= 0)
             {
-                return BadRequest("Deposit amount must be greater than zero");
+                return BadRequest("Transaction amount must be greater than zero");
             }
 
             account.Balance += accountDepositDTO.Amount;

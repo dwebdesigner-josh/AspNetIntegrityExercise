@@ -39,7 +39,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -65,7 +65,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 999,
@@ -86,7 +86,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 999, // Wrong customer
                 AccountId = 17,
@@ -107,7 +107,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -119,7 +119,7 @@ namespace api.Tests.Controllers
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Deposit amount must be greater than zero", badRequestResult.Value);
+            Assert.Equal("Transaction amount must be greater than zero", badRequestResult.Value);
         }
 
         [Fact]
@@ -128,7 +128,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -140,7 +140,7 @@ namespace api.Tests.Controllers
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Deposit amount must be greater than zero", badRequestResult.Value);
+            Assert.Equal("Transaction amount must be greater than zero", badRequestResult.Value);
         }
 
         [Fact]
@@ -149,7 +149,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -173,7 +173,7 @@ namespace api.Tests.Controllers
             // Arrange
             _fixture.SeedTestData(); 
             var controller = CreateController();
-            var depositRequest = new AccountDepositRequestDTO
+            var depositRequest = new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -199,7 +199,7 @@ namespace api.Tests.Controllers
             var controller = CreateController();
 
             // Act - First deposit
-            var result1 = await controller.Deposit(new AccountDepositRequestDTO
+            var result1 = await controller.Deposit(new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,
@@ -210,7 +210,7 @@ namespace api.Tests.Controllers
             Assert.Equal(2275.13m, response1.Balance);
 
             // Act - Second deposit
-            var result2 = await controller.Deposit(new AccountDepositRequestDTO
+            var result2 = await controller.Deposit(new AccountTransactionRequestDTO
             {
                 CustomerId = 5,
                 AccountId = 17,

@@ -7,7 +7,7 @@ using api.Models;
 
 namespace api.DTOs.Account
 {
-    public class AccountDepositRequestDTO
+    public class AccountTransactionRequestDTO
     {
 
         [Required]
@@ -17,7 +17,7 @@ namespace api.DTOs.Account
         public int AccountId { get; set; }
         
         [Required] 
-        [Range(0.01, double.MaxValue, ErrorMessage="Deposit amount must be greater than 0")] 
+        [Range(0.01, double.MaxValue, ErrorMessage="Transaction amount must be greater than zero")] 
         public decimal Amount { get; set; }
 
     }
