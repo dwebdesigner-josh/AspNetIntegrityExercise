@@ -24,7 +24,13 @@ namespace api.Controllers
     {
         if (result.Succeeded)
         {
-            return Ok(result); 
+            return Ok(new AccountBalanceResponseDTO
+            {
+                CustomerId = result.CustomerId,
+                AccountId = result.AccountId,
+                Balance = result.Balance,
+                Succeeded = true
+            });
         }
             
 
